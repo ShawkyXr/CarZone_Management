@@ -1,9 +1,14 @@
 import tkinter as tk
-import sqlite3 as sql
+import sqlite3
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 from PIL import Image, ImageTk
+
+def get_db_connection():
+    conn = sqlite3.connect("car_management.db")
+    conn.row_factory = sqlite3.Row
+    return conn
 
 root = tk.Tk()
 
@@ -116,6 +121,21 @@ def main():
         add_btn = tk.Button(add_car_frame, text="Add Car", font=("jetbrains mono", 12, "bold"), fg="black", bg="#d6a629",
                                     bd=0, width=25 , highlightthickness=0)
         add_btn.place(x = 210, y = 280)
+        
+        #add to the database
+        def add_car_to_db():
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO cars (name, model, price, color, image_path) VALUES (?, ?, ?, ?, ?)",
+                (car_name_entry.get(), car_model_entry.get(), car_price_entry.get(), car_color_entry.get(), upload_image())
+            )
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Success", "Car added successfully!")
+
+        add_btn.config(command=add_car_to_db)
+        
     display_add_frame()
 
 
