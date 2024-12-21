@@ -149,6 +149,18 @@ def main():
         delete_btn = tk.Button(delete_car_frame, text="Delete Car", font=("jetbrains mono", 12, "bold"), fg="black", bg="#d6a629",
                                     bd=0, width=25 , highlightthickness=0)
         delete_btn.place(x = 210, y = 280)
+        
+        #delete from the database
+        def delete_car_from_db():
+            car_id = car_id_entry.get()
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM cars WHERE id = ?", (car_id,))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Success", f"Car with ID {car_id} has been deleted.")
+
+        delete_btn.config(command=delete_car_from_db)
     display_delete_frame()
 
 
