@@ -1,8 +1,11 @@
 import tkinter as tk
 from PIL import Image, ImageTk
-from Management import get_db_connection
+from Management import get_db_connection,main as management_main
+import Management
+from add_users import add_user
 
-def login(username,password):
+
+def login(username,password,root1):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE email = ? AND password = ?", (username, password))
@@ -11,8 +14,9 @@ def login(username,password):
 
     if user:
         tk.messagebox.showinfo("Login Success", "Welcome!")
-        tk.root.destroy()  
-        import Management  
+        for widget in root1.winfo_children():
+            widget.destroy()  
+        management_main(root1)
     else:
         tk.messagebox.showerror("Login Failed", "Invalid email or password.")
         
@@ -24,11 +28,19 @@ def main():
     root.geometry("700x550")
     root.resizable(False, False)
     root.config(bg="#020202")
-    img = Image.open("C:\car_managment\CarZone_Management\images\Background.png")
-    bcg = img.resize((680, 500))
-    bcg = ImageTk.PhotoImage(bcg)
-    bcg_label = tk.Label(root, image=bcg, bd=0, highlightthickness=0)
-    bcg_label.pack()
+    try:
+        # Use raw string for the file path
+        img = Image.open("images/Background.png")
+        bcg = img.resize((680, 500))
+        bcg = ImageTk.PhotoImage(bcg)
+
+        # Keep a reference to the image
+        root.bcg = bcg
+
+        bcg_label = tk.Label(root, image=bcg, bd=0, highlightthickness=0)
+        bcg_label.pack()
+    except Exception as e:
+        tk.messagebox.showerror("Image Error", f"Failed to load image: {e}")
 
     header = tk.Label(root, text="CarZone System Managment App", font=("jetbrains mono",25, "bold"), fg="#d6a629", bg="#020202")
     header.place(x = 100 , y = 60)
@@ -47,8 +59,16 @@ def main():
     pwd_entry.place(x = 280, y = 430)
 
     # login button
-    login_btn = tk.Button(root, text="Login", font=("jetbrains mono", 12, "bold"), fg="black", bg="#d6a629", bd=0, highlightthickness=0,command=lambda: login(usr_entry.get(), pwd_entry.get()))
+    login_btn = tk.Button(root, text="Login", font=("jetbrains mono", 12, "bold"), fg="black", bg="#d6a629", bd=0, highlightthickness=0,command=lambda: login(usr_entry.get(), pwd_entry.get(),root))
     login_btn.place(x = 310, y = 480)
+    
+    # Add User Button
+    add_user_btn = tk.Button(root, text="Add User", font=("jetbrains mono", 12, "bold"), fg="black", bg="#d6a629", bd=0, highlightthickness=0)
+    add_user_btn.place(x=400, y=480)
+
+    add_user_btn.config(command=lambda: add_user(root))
+    
+    
 
     root.mainloop()
 

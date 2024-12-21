@@ -1,6 +1,5 @@
 import tkinter as tk
 import sqlite3
-from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 from PIL import Image, ImageTk
@@ -10,9 +9,8 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-root = tk.Tk()
 
-def main():
+def main(root):
     root.title("CarZone")
     root.geometry("700x550")
     root.config(bg="#020202")
@@ -189,6 +187,27 @@ def main():
         sell_btn = tk.Button(sell_car_frame, text="Sell Car", font=("jetbrains mono", 12, "bold"), fg="black", bg="#d6a629",
                                     bd=0, width=25 , highlightthickness=0)
         sell_btn.place(x = 210, y = 280)
+        
+        #db section
+        def sell_car():
+            car_id = car_id_entry.get()
+            buyer_name = usr_name_entry.get()
+            buyer_phone = usr_phone_entry.get()
+            sale_date = date_entry.get()
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute(
+                "INSERT INTO transactions(car_id, buyer_name, buyer_phone, date) VALUES(?,?,?,?)",
+                (car_id,buyer_name,buyer_phone,sale_date)
+            )
+            
+            cursor.execute("DELETE FROM cars WHERE id = ?", (car_id,))
+            conn.commit()
+            conn.close()
+            messagebox.showinfo("Success", f"Car with ID {car_id} has been sold to {buyer_name}.")
+        sell_btn.config(command=sell_car)
     display_sell_frame()
 
 
@@ -204,7 +223,5 @@ def main():
     display_view_frame()
 
 
-
 if __name__ == '__main__':
     main()
-    root.mainloop()
