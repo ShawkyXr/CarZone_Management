@@ -2,13 +2,13 @@ import tkinter as tk
 from PIL import Image, ImageTk
 from Management import get_db_connection,main as management_main
 import Management
-from add_users import add_user
+from Add_users import add_user
 
 
 def login(username,password,root1):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE email = ? AND password = ?", (username, password))
+    cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
     user = cursor.fetchone()
     conn.close()
 
@@ -18,7 +18,7 @@ def login(username,password,root1):
             widget.destroy()  
         management_main(root1)
     else:
-        tk.messagebox.showerror("Login Failed", "Invalid email or password.")
+        tk.messagebox.showerror("Login Failed", "Invalid username or password.")
         
 
 def main():
@@ -60,15 +60,14 @@ def main():
 
     # login button
     login_btn = tk.Button(root, text="Login", font=("jetbrains mono", 12, "bold"), fg="black", bg="#d6a629", bd=0, highlightthickness=0,command=lambda: login(usr_entry.get(), pwd_entry.get(),root))
-    login_btn.place(x = 310, y = 480)
+    login_btn.place(x = 280, y = 480)
     
     # Add User Button
     add_user_btn = tk.Button(root, text="Add User", font=("jetbrains mono", 12, "bold"), fg="black", bg="#d6a629", bd=0, highlightthickness=0)
-    add_user_btn.place(x=400, y=480)
+    add_user_btn.place(x=360, y=480)
 
-    add_user_btn.config(command=lambda: add_user(root))
-    
-    
+    add_user_btn.config(command=lambda: add_user(root))   
+
 
     root.mainloop()
 
