@@ -5,7 +5,7 @@ from tkinter import filedialog
 from PIL import Image, ImageTk
 
 def get_db_connection():
-    conn = sqlite3.connect("car_management.db")
+    conn = sqlite3.connect("Cars_DataBase.db")
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -109,12 +109,15 @@ def main(root):
                                     bd=0, width=18, highlightthickness=0)
         car_image_btn.place(x = 300, y = 200)
 
+        car_image_path = ""
+
         def upload_image():
-            img = filedialog.askopenfilename(filetypes=[("Image Files", "*.jpg;*.jpeg;*.png;*.gif")])
-            return img
+            nonlocal car_image_path
+            car_image_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png *.jpg *.jpeg")])
+            print("Image Path: ", car_image_path)
+            car_image_btn.config(text="Image Uploaded")
 
         car_image_btn.config(command=upload_image)
-
 
         add_btn = tk.Button(add_car_frame, text="Add Car", font=("jetbrains mono", 12, "bold"), fg="black", bg="#d6a629",
                                     bd=0, width=25 , highlightthickness=0)
@@ -122,18 +125,24 @@ def main(root):
         
         #add to the database
         def add_car_to_db():
+
+            # validate the entries
+            print("path: ", car_image_path)
+            if not car_name_entry.get() or not car_model_entry.get() or not car_price_entry.get() or not car_color_entry.get() or not car_image_path:
+                messagebox.showerror("Error", "All fields are required.")
+                return
+            
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO cars (name, model, price, color, image_path) VALUES (?, ?, ?, ?, ?)",
-                (car_name_entry.get(), car_model_entry.get(), car_price_entry.get(), car_color_entry.get(), upload_image())
+                (car_name_entry.get(), car_model_entry.get(), car_price_entry.get(), car_color_entry.get(), car_image_path)
             )
             conn.commit()
             conn.close()
             messagebox.showinfo("Success", "Car added successfully!")
 
         add_btn.config(command=add_car_to_db)
-        
     display_add_frame()
 
 
@@ -150,14 +159,30 @@ def main(root):
         
         #delete from the database
         def delete_car_from_db():
+            # validate the entry
+            if not car_id_entry.get():
+                messagebox.showerror("Error", "Car ID is required.")
+                return
+            if not car_id_entry.get().isdigit():
+                messagebox.showerror("Error", "Car ID must be a number.")
+                return
+            
+            if not messagebox.askyesno("Confirmation", "Are you sure you want to delete this car?"):
+                return
+
             car_id = car_id_entry.get()
             conn = get_db_connection()
             cursor = conn.cursor()
+            # check if the car exists
+            cursor.execute("SELECT * FROM cars WHERE id = ?", (car_id,))
+            car = cursor.fetchone()
+            if not car:
+                messagebox.showerror("Error", f"Car with ID {car_id} does not exist.")
+                return
             cursor.execute("DELETE FROM cars WHERE id = ?", (car_id,))
             conn.commit()
             conn.close()
             messagebox.showinfo("Success", f"Car with ID {car_id} has been deleted.")
-
         delete_btn.config(command=delete_car_from_db)
     display_delete_frame()
 
@@ -194,9 +219,22 @@ def main(root):
             buyer_name = usr_name_entry.get()
             buyer_phone = usr_phone_entry.get()
             sale_date = date_entry.get()
+            if not car_id or not buyer_name or not buyer_phone or not sale_date:
+                messagebox.showerror("Error", "All fields are required.")
+                return
+            if not car_id.isdigit():
+                messagebox.showerror("Error", "Car ID must be a number.")
+                return
             
             conn = get_db_connection()
             cursor = conn.cursor()
+
+            # check if the car exists
+            cursor.execute("SELECT * FROM cars WHERE id = ?", (car_id,))
+            car = cursor.fetchone()
+            if not car:
+                messagebox.showerror("Error", f"Car with ID {car_id} does not exist.")
+                return
             
             cursor.execute(
                 "INSERT INTO transactions(car_id, buyer_name, buyer_phone, date) VALUES(?,?,?,?)",
@@ -220,6 +258,57 @@ def main(root):
         view_btn = tk.Button(view_car_frame, text="View Car", font=("jetbrains mono", 12, "bold"), fg="black", bg="#d6a629",
                                     bd=0, width=25 , highlightthickness=0)
         view_btn.place(x = 210, y = 280)
+
+        def view_car():
+            car_id = car_id_entry.get()
+            if not car_id:
+                messagebox.showerror("Error", "Car ID is required.")
+                return
+            if not car_id.isdigit():
+                messagebox.showerror("Error", "Car ID must be a number.")
+                return
+            
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM cars WHERE id = ?", (car_id,))
+            car = cursor.fetchone()
+            conn.close()
+            if not car:
+                messagebox.showerror("Error", f"Car with ID {car_id} does not exist.")
+                return
+            # display the car details with image
+            car_name = car["name"]
+            car_model = car["model"]
+            car_price = car["price"]
+            car_color = car["color"]
+            car_image_path = car["image_path"]
+
+            car_name_label = tk.Label(view_car_frame, text=f"Car Name: {car_name}", font=("jetbrains mono", 13, "bold"), fg="#d6a629", bg="#020202")
+            car_name_label.place(x = 170, y = 50)
+            
+            car_model_label = tk.Label(view_car_frame, text=f"Car Model: {car_model}", font=("jetbrains mono", 13, "bold"), fg="#d6a629", bg="#020202")
+            car_model_label.place(x = 170, y = 100)
+
+            car_price_label = tk.Label(view_car_frame, text=f"Car Price: {car_price}", font=("jetbrains mono", 13, "bold"), fg="#d6a629", bg="#020202")
+            car_price_label.place(x = 170, y = 150)
+
+            car_color_label = tk.Label(view_car_frame, text=f"Car Color: {car_color}", font=("jetbrains mono", 13, "bold"), fg="#d6a629", bg="#020202")
+            car_color_label.place(x = 170, y = 200)
+
+            try:
+                img = Image.open(car_image_path)
+                img = img.resize((200, 150))
+                img = ImageTk.PhotoImage(img)
+                car_image_label = tk.Label(view_car_frame, image=img, bd=0, highlightthickness=0)
+                car_image_label.image = img
+                car_image_label.place(x = 400, y = 50)
+            except Exception as e:
+                print("Failed to load image: ", e)
+                car_image_label = tk.Label(view_car_frame, text="Image not found", font=("jetbrains mono", 13, "bold"), fg="#d6a629", bg="#020202")
+                car_image_label.place(x = 400, y = 50)
+
+        view_btn.config(command=view_car)
+
     display_view_frame()
 
 
