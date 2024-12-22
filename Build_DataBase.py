@@ -1,13 +1,13 @@
 import sqlite3
 
-def initialize_database():
-    connection = sqlite3.connect("car_management.db")  
+def Build_DataBase():
+    connection = sqlite3.connect("Cars_DataBase.db")  
     cursor = connection.cursor()
     
     schema = """
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE NOT NULL,
+        user TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL
     );
 
@@ -35,4 +35,4 @@ def initialize_database():
     connection.close()
 
 if __name__ == "__main__":
-    initialize_database()
+    Build_DataBase()
